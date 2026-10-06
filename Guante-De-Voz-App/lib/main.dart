@@ -475,7 +475,7 @@ class _HomeShellState extends State<HomeShell> {
   );
 
   List<double>? restVector;
-  String ized = '—';
+  String recognized = '—';
   double confidence = 0;
   String language = 'es-PA';
   int tab = 0;
@@ -488,6 +488,7 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   void initState() {
+    // ...
     super.initState();
     _load();
     ble.addListener(_refresh);
