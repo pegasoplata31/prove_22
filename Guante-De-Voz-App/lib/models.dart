@@ -33,9 +33,9 @@ class SensorFrame {
   /// [5..6]   int16_t  ax      /100
   /// [7..8]   int16_t  ay      /100
   /// [9..10]  int16_t  az      /100
-  /// [11..12] int16_t  gx      /100
-  /// [13..14] int16_t  gy      /100
-  /// [15..16] int16_t  gz      /100
+  /// [11..12] int16_t  gx      /10
+  /// [13..14] int16_t  gy      /10
+  /// [15..16] int16_t  gz      /10
   static SensorFrame? fromBinary(List<int> bytes) {
     if (bytes.length < 17) return null;
     try {
@@ -51,23 +51,23 @@ class SensorFrame {
         (mask & 0x10) != 0 ? 1.0 : 0.0, // meñique
       ];
 
-      int off = 1;
-      double next() {
-        final v = data.getInt16(off, Endian.little) / 100.0;
+            int off = 1;
+      double next(double scale) {
+        final v = data.getInt16(off, Endian.little) / scale;
         off += 2;
         return v;
       }
 
       return SensorFrame(
         fingers: fingers,
-        pitch: next(),
-        roll: next(),
-        ax: next(),
-        ay: next(),
-        az: next(),
-        gx: next(),
-        gy: next(),
-        gz: next(),
+        pitch: next(100.0),
+        roll:  next(100.0),
+        ax:    next(100.0),
+        ay:    next(100.0),
+        az:    next(100.0),
+        gx:    next(10.0),
+        gy:    next(10.0),
+        gz:    next(10.0),
       );
     } catch (_) {
       return null;
