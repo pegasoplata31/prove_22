@@ -1646,7 +1646,7 @@ class _Hand3DPainter extends CustomPainter {
     final roll = (f?.roll ?? 0) * math.pi / 180.0;
 
     // Proyección isométrica simple
-    List<Offset> project(List<double> v) {
+    Offset project(List<double> v) {
       // Rotación pitch (eje X)
       final cp = math.cos(pitch), sp = math.sin(pitch);
       final y1 = v[1] * cp - v[2] * sp;
@@ -1721,7 +1721,7 @@ class _Hand3DPainter extends CustomPainter {
     required this.active,
     required this.confidence,
     required this.dark,
-  });
+  });                    
 
   @override
   void paint(Canvas canvas, Size size) {
