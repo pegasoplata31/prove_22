@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'ble_manager.dart';
 import 'models.dart';
 import 'storage.dart';
+import 'json_exporter.dart'; 
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -681,6 +682,23 @@ class _HomeShellState extends State<HomeShell> {
 
   Future<void> _speak() async {
     if (translated == '—') return;
+    // Traduce cada palabra con la tabla del gesto si existe
+    final translatedWords = phraseWords.map((word) {
+      for (final g in gestures) {
+        if (g.id.toLowerCase() == word.toLowerCase()) {
+          final exact = g.translations[language];
+          if (exact != null && exact.trim().isNotEmpty) return exact;
+          if (language.startsWith('es-')) {
+            return g.translations['es'] ?? word;
+          }
+          if (language.startsWith('zh-')) {
+            return g.translations['zh'] ?? word;
+          }
+          return g.translations[language] ?? word;
+        }
+      }
+      return builtInTranslation(word, language);
+    }).join(' ');
     final lang = kLanguages.firstWhere(
       (l) => l.code == language,
       orElse: () => kLanguages[2],
