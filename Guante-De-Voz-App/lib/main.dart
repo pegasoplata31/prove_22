@@ -483,6 +483,9 @@ class _HomeShellState extends State<HomeShell> {
   bool dynamicMode = false;
   final List<List<double>> dynamicBuffer = [];
 
+  bool phraseMode = false;              
+  final List<String> phraseWords = [];
+
   String _t(String es, String en) =>
       widget.uiLanguage == 'en' ? en : es;
 
@@ -1203,6 +1206,61 @@ class _HomeShellState extends State<HomeShell> {
             ],
           ),
         ),
+        // Toggle de Modo Frase
+GlassCard(
+  child: SwitchListTile(
+    value: phraseMode,
+    onChanged: (v) => setState(() {
+      phraseMode = v;
+      if (!v) phraseWords.clear();
+    }),
+    title: Text(_t('Modo Frase', 'Phrase Mode')),
+    subtitle: Text(_t(
+      'Acumula palabras y reproduce la oración completa',
+      'Accumulate words and speak the full sentence',
+    )),
+  ),
+),
+// Si phraseMode está activo, mostrar palabras acumuladas
+if (phraseMode) ...[
+  const SizedBox(height: 12),
+  GlassCard(
+    child: Column(
+      children: [
+        Text(
+          phraseWords.isEmpty
+              ? _t('Sin palabras aún', 'No words yet')
+              : phraseWords.join(' · '),
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: LiquidButton(
+                label: _t('Reproducir frase', 'Speak phrase'),
+                icon: Icons.volume_up,
+                onPressed: phraseWords.isEmpty ? null : _speakPhrase,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: LiquidButton(
+                label: _t('Limpiar', 'Clear'),
+                icon: Icons.clear,
+                primary: false,
+                onPressed: phraseWords.isEmpty
+                    ? null
+                    : () => setState(() => phraseWords.clear()),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  ),
+],
         const SizedBox(height: 16),
         // Vista 3D en vivo
         GlassCard(
@@ -1415,6 +1473,55 @@ class _HomeShellState extends State<HomeShell> {
           style: const TextStyle(color: Color(0xFF91A6C0)),
         ),
         const SizedBox(height: 16),
+        Row(
+  children: [
+    Expanded(
+      child: OutlinedButton.icon(
+        onPressed: () async {
+          final path = await JsonExporter.exportToJson(gestures);
+          if (!mounted) return;
+          _snack(path != null
+              ? _t('Señas exportadas a: $path', 'Signs exported to: $path')
+              : _t('Error al exportar', 'Export failed'));
+        },
+        icon: const Icon(Icons.upload_file),
+        label: Text(_t('Exportar JSON', 'Export JSON')),
+      ),
+    ),
+    const SizedBox(width: 10),
+    Expanded(
+      child: OutlinedButton.icon(
+        onPressed: () async {
+          final imported = await JsonExporter.importFromJson();
+          if (imported == null) {
+            if (mounted) _snack(_t('Error al importar', 'Import failed'));
+            return;
+          }
+          setState(() {
+            for (final g in imported) {
+              final i = gestures.indexWhere(
+                  (x) => x.id.toLowerCase() == g.id.toLowerCase());
+              if (i >= 0) {
+                gestures[i] = g;
+              } else {
+                gestures.add(g);
+              }
+            }
+          });
+          await storage.save(gestures);
+          if (mounted) {
+            _snack(_t(
+              '${imported.length} seña(s) importada(s)',
+              '${imported.length} sign(s) imported',
+            ));
+          }
+        },
+        icon: const Icon(Icons.download),
+        label: Text(_t('Importar JSON', 'Import JSON')),
+      ),
+    ),
+  ],
+),
         if (gestures.isEmpty)
           GlassCard(
             child: Padding(
