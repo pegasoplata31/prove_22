@@ -13,12 +13,16 @@ jobs:
     name: Compilar APK Android
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: Guante-De-Voz-App
+
     steps:
       - name: Descargar proyecto
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Instalar Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -115,6 +119,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Beyond-Words-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: Guante-De-Voz-App/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30
