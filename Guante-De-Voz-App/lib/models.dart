@@ -318,7 +318,7 @@ class GestureMath {
   static RecognitionResult? recognizeStatic(
     List<double> vector,
     List<TrainingGesture> gestures, {
-    double threshold = 0.42,
+    double threshold = 0.60,
     int k = 3,
   }) {
     RecognitionResult? best;
@@ -350,7 +350,7 @@ class GestureMath {
   static RecognitionResult? recognizeDynamic(
     List<List<double>> sequence,
     List<TrainingGesture> gestures, {
-    double threshold = 0.35,
+    double threshold = 0.55,
     int k = 3,
   }) {
     if (sequence.isEmpty) return null;
