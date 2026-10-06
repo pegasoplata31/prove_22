@@ -906,7 +906,7 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
-  Widget _liquidNavBar() {
+   Widget _liquidNavBar() {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
@@ -914,16 +914,21 @@ class _HomeShellState extends State<HomeShell> {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
           radius: 26,
           blur: 22,
-          child: Row(
-            children: [
-              _navItem(0, Icons.translate,
-                  _t('Traducir', 'Translate')),
-              _navItem(1, Icons.add_circle_outline,
-                  _t('Agregar', 'Add')),
-              _navItem(2, Icons.list_alt,
-                  _t('Señas', 'Signs')),
-              _navItem(3, Icons.terminal, 'BLE'),
-            ],
+          child: SizedBox(
+            height: 64,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _navItem(0, Icons.translate,
+                    _t('Traducir', 'Translate')),
+                _navItem(1, Icons.add_circle_outline,
+                    _t('Agregar', 'Add')),
+                _navItem(2, Icons.list_alt,
+                    _t('Señas', 'Signs')),
+                _navItem(3, Icons.terminal, 'BLE'),
+              ],
+            ),
           ),
         ),
       ),
@@ -933,42 +938,47 @@ class _HomeShellState extends State<HomeShell> {
   Widget _navItem(int i, IconData icon, String label) {
     final active = tab == i;
     return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => tab = i),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: active
-                ? const LinearGradient(
-                    colors: [Color(0xFF0A84FF), Color(0xFF22D3EE)],
-                  )
-                : null,
-          ),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                size: 22,
-                color: active
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.onSurface
-                        .withValues(alpha: 0.7),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 3),
+        child: GestureDetector(
+          onTap: () => setState(() => tab = i),
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: active
+                  ? const LinearGradient(
+                      colors: [Color(0xFF0A84FF), Color(0xFF22D3EE)],
+                    )
+                  : null,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 22,
                   color: active
                       ? Colors.white
                       : Theme.of(context).colorScheme.onSurface
                           .withValues(alpha: 0.7),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: active
+                        ? Colors.white
+                        : Theme.of(context).colorScheme.onSurface
+                            .withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
