@@ -471,11 +471,11 @@ class _HomeShellState extends State<HomeShell> {
   final segmenterLeft = MotionSegmenter();
   final segmenterRight = MotionSegmenter();
   final stability = StabilityFilter(
-    hold: const Duration(milliseconds: 320),
+    hold: const Duration(milliseconds: 250),
   );
 
   List<double>? restVector;
-  String recognized = '—';
+  String ized = '—';
   double confidence = 0;
   String language = 'es-PA';
   int tab = 0;
@@ -551,10 +551,10 @@ class _HomeShellState extends State<HomeShell> {
   List<double>? _currentVector() {
     final now = DateTime.now();
     final l = leftWindow
-        .where((f) => now.difference(f.time).inMilliseconds < 500)
+        .where((f) => now.difference(f.time).inMilliseconds < 1200)
         .toList();
     final r = rightWindow
-        .where((f) => now.difference(f.time).inMilliseconds < 500)
+        .where((f) => now.difference(f.time).inMilliseconds < 1200)
         .toList();
     if (l.isEmpty && r.isEmpty) return null;
 
@@ -625,7 +625,7 @@ class _HomeShellState extends State<HomeShell> {
     // Anti-reposo
     if (restVector != null && restVector!.length == v.length) {
       final restDist = GestureMath.vectorDistance(v, restVector!);
-      if (restDist < 0.20) {
+      if (restDist < 0.30) {
         stability.reset();
         return;
       }
