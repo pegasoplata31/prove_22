@@ -141,7 +141,9 @@ jobs:
         run: flutter analyze || true
 
       - name: Compilar APK release
-        run: flutter build apk --release --no-tree-shake-icons
+        run: |
+          export GRADLE_OPTS="-I $PWD/init.gradle"
+          flutter build apk --release --no-tree-shake-icons
 
       - name: Verificar APK
         run: |
