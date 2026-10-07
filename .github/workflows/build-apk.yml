@@ -203,11 +203,6 @@ jobs:
                   android:name="android.permission.ACCESS_FINE_LOCATION"
                   android:maxSdkVersion="30" />
 
-              <!-- Librerías nativas para MediaPipe (Gemma 2B) -->
-              <uses-native-library android:name="libOpenCL.so" android:required="false"/>
-              <uses-native-library android:name="libOpenCL-car.so" android:required="false"/>
-              <uses-native-library android:name="libOpenCL-pixel.so" android:required="false"/>
-
               <uses-feature
                   android:name="android.hardware.bluetooth_le"
                   android:required="true" />
