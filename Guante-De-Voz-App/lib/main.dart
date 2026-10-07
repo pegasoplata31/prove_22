@@ -680,6 +680,18 @@ class _HomeShellState extends State<HomeShell> {
     return builtInTranslation(recognized, language);
   }
 
+    Future<void> _speak() async {
+    if (translated == '—') return;
+    final lang = kLanguages.firstWhere(
+      (l) => l.code == language,
+      orElse: () => kLanguages[2],
+    );
+    await tts.setLanguage(lang.tts);
+    await tts.setSpeechRate(widget.speechRate);
+    await tts.setVolume(widget.speechVolume);
+    await tts.speak(translated);
+  }
+
     Future<void> _speakPhrase() async {
     if (phraseWords.isEmpty) return;
 
