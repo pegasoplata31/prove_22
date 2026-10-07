@@ -1,3 +1,4 @@
+// init.gradle — script auxiliar (no se usa actualmente en el workflow).
 allprojects {
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
