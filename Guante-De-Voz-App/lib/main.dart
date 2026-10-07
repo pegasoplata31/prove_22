@@ -680,8 +680,9 @@ class _HomeShellState extends State<HomeShell> {
     return builtInTranslation(recognized, language);
   }
 
-  Future<void> _speak() async {
-    if (translated == '—') return;
+    Future<void> _speakPhrase() async {
+    if (phraseWords.isEmpty) return;
+
     // Traduce cada palabra con la tabla del gesto si existe
     final translatedWords = phraseWords.map((word) {
       for (final g in gestures) {
@@ -699,6 +700,7 @@ class _HomeShellState extends State<HomeShell> {
       }
       return builtInTranslation(word, language);
     }).join(' ');
+
     final lang = kLanguages.firstWhere(
       (l) => l.code == language,
       orElse: () => kLanguages[2],
@@ -706,7 +708,9 @@ class _HomeShellState extends State<HomeShell> {
     await tts.setLanguage(lang.tts);
     await tts.setSpeechRate(widget.speechRate);
     await tts.setVolume(widget.speechVolume);
-    await tts.speak(translated);
+    await tts.speak(translatedWords);
+
+    if (mounted) setState(() => phraseWords.clear());
   }
 
   Future<void> _captureRest() async {
