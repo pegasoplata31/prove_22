@@ -1,3 +1,9 @@
+// ============================================================
+//  ble_manager.dart
+//  Conexión BLE con los guantes Beyondwords_Left / Beyondwords_Right.
+//  Parsea el paquete binario de 17 bytes (little-endian).
+// ============================================================
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -6,6 +12,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'models.dart';
 
+/// Un paquete recibido del guante (o generado internamente).
 class BlePacket {
   final HandSide? side;
   final String raw;
@@ -33,9 +40,9 @@ class BlePacket {
 ///   [5..6]   int16_t  ax       /100
 ///   [7..8]   int16_t  ay       /100
 ///   [9..10]  int16_t  az       /100
-///   [11..12] int16_t  gx       /100
-///   [13..14] int16_t  gy       /100
-///   [15..16] int16_t  gz       /100
+///   [11..12] int16_t  gx       /10
+///   [13..14] int16_t  gy       /10
+///   [15..16] int16_t  gz       /10
 class BleManager extends ChangeNotifier {
   static const serviceUuid =
       '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
@@ -59,8 +66,7 @@ class BleManager extends ChangeNotifier {
 
   final List<ScanResult> scanResults = [];
   final Map<String, StreamSubscription<List<int>>> _valueSubs = {};
-  final Map<String, StreamSubscription<BluetoothConnectionState>> _connSubs =
-      {};
+  final Map<String, StreamSubscription<BluetoothConnectionState>> _connSubs = {};
 
   DateTime? _leftLastRx;
   DateTime? _rightLastRx;
@@ -78,10 +84,8 @@ class BleManager extends ChangeNotifier {
 
   int notificationCount(HandSide side) =>
       side == HandSide.left ? _leftNotifications : _rightNotifications;
-
   int validFrameCount(HandSide side) =>
       side == HandSide.left ? _leftValidFrames : _rightValidFrames;
-
   int badFrameCount(HandSide side) =>
       side == HandSide.left ? _leftBadFrames : _rightBadFrames;
 
@@ -105,6 +109,7 @@ class BleManager extends ChangeNotifier {
     ].request();
   }
 
+  /// Escanea y conecta automáticamente a los dos guantes.
   Future<void> scanAndAutoConnect() async {
     await requestPermissions();
     scanResults.clear();
@@ -135,14 +140,12 @@ class BleManager extends ChangeNotifier {
         withServices: [Guid(serviceUuid)],
       );
       await Future.delayed(const Duration(seconds: 8));
-    } catch (_) {
-      // Ignorar si ya se está deteniendo.
-    } finally {
-      await sub.cancel();
-      scanning = false;
-      status = 'Búsqueda finalizada';
-      notifyListeners();
-    }
+    } catch (_) {}
+
+    await sub.cancel();
+    scanning = false;
+    status = 'Búsqueda finalizada';
+    notifyListeners();
   }
 
   Future<void> connectDevice(BluetoothDevice device, HandSide side) async {
@@ -227,7 +230,6 @@ class BleManager extends ChangeNotifier {
   }
 
   /// Envía un comando de texto al guante (para recalibración remota).
-  /// El firmware debe aceptar WRITE en la misma característica.
   Future<bool> writeCommand(HandSide side, String command) async {
     final ch = side == HandSide.left ? _leftChar : _rightChar;
     if (ch == null) return false;
@@ -305,7 +307,7 @@ class BleManager extends ChangeNotifier {
       _markBad(side);
     }
 
-    // 2) Fallback: texto ASCII (por compatibilidad con firmware antiguo).
+    // 2) Fallback: texto ASCII.
     if (_isPrintableAscii(bytes)) {
       final raw = utf8.decode(bytes).trim();
       if (raw.isNotEmpty) {
