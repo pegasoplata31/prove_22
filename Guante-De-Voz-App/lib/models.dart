@@ -1,3 +1,8 @@
+// ============================================================
+//  models.dart
+//  Estructuras de datos + parser binario + reconocimiento (KNN + DTW).
+// ============================================================
+
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -26,7 +31,6 @@ class SensorFrame {
   }) : time = time ?? DateTime.now();
 
   /// Decodifica el paquete binario de 17 bytes del ESP32.
-  ///
   /// [0]      uint8_t  fingers (bit0=pulgar ... bit4=meñique)
   /// [1..2]   int16_t  pitch   /100
   /// [3..4]   int16_t  roll    /100
@@ -51,7 +55,7 @@ class SensorFrame {
         (mask & 0x10) != 0 ? 1.0 : 0.0, // meñique
       ];
 
-            int off = 1;
+      int off = 1;
       double next(double scale) {
         final v = data.getInt16(off, Endian.little) / scale;
         off += 2;
@@ -74,7 +78,7 @@ class SensorFrame {
     }
   }
 
-  /// Parser CSV antiguo, se mantiene por compatibilidad.
+  /// Parser CSV antiguo (compatibilidad con firmware viejo).
   static SensorFrame? fromCsv(String raw) {
     final parts = raw.trim().split(',');
     if (parts.length < 9) return null;
@@ -102,7 +106,6 @@ class SensorFrame {
   }
 
   /// Vector normalizado de 13 dimensiones por mano.
-  /// [fingers(5), pitch/180, roll/180, ax/20, ay/20, az/20, gx/10, gy/10, gz/10]
   List<double> normalizedVector() => [
         ...fingers,
         pitch / 180.0,
@@ -198,8 +201,7 @@ class TrainingGesture {
   /// Para señas estáticas: cada muestra es un vector de 26 dims.
   final List<List<double>> samples;
 
-  /// Para señas dinámicas: cada muestra es una secuencia temporal
-  /// de vectores (cada uno de 26 dims).
+  /// Para señas dinámicas: cada muestra es una secuencia temporal.
   final List<List<List<double>>> sequences;
 
   TrainingGesture({
@@ -258,11 +260,7 @@ class RecognitionResult {
   RecognitionResult(this.gesture, this.distance, this.confidence);
 }
 
-/// Motor de reconocimiento con:
-///   - Distancia euclídea + KNN (señas estáticas).
-///   - DTW + KNN (señas dinámicas).
-///   - Detección de reposo.
-///   - Ventana de permanencia (debounce).
+/// Motor de reconocimiento (KNN + DTW + umbrales relajados).
 class GestureMath {
   static double vectorDistance(List<double> a, List<double> b) {
     if (a.length != b.length || a.isEmpty) return double.infinity;
@@ -275,7 +273,6 @@ class GestureMath {
   }
 
   /// DTW entre dos secuencias de vectores de la misma dimensión.
-  /// Devuelve la distancia normalizada (menor = más parecido).
   static double dtw(
     List<List<double>> a,
     List<List<double>> b, {
@@ -309,8 +306,6 @@ class GestureMath {
         prev[j] = curr[j];
       }
     }
-
-    // Normalización por longitud del camino.
     return prev[m] / math.max(n, m);
   }
 
@@ -318,7 +313,7 @@ class GestureMath {
   static RecognitionResult? recognizeStatic(
     List<double> vector,
     List<TrainingGesture> gestures, {
-    double threshold = 0.60,
+    double threshold = 0.60, // relajado (antes 0.42)
     int k = 3,
   }) {
     RecognitionResult? best;
@@ -346,11 +341,11 @@ class GestureMath {
     return best;
   }
 
-  /// Reconoce una seña dinámica (secuencia temporal de vectores 26 dims).
+  /// Reconoce una seña dinámica (secuencia temporal).
   static RecognitionResult? recognizeDynamic(
     List<List<double>> sequence,
     List<TrainingGesture> gestures, {
-    double threshold = 0.55,
+    double threshold = 0.55, // relajado (antes 0.35)
     int k = 3,
   }) {
     if (sequence.isEmpty) return null;
@@ -381,9 +376,6 @@ class GestureMath {
 }
 
 /// Detector de movimiento por aceleración resultante.
-///
-/// Inicia una grabación cuando |a| se aleja del rango de reposo
-/// (~1 g ± 0.15 g) y la termina cuando vuelve a estabilizarse.
 class MotionSegmenter {
   final double restMin;
   final double restMax;
@@ -403,10 +395,8 @@ class MotionSegmenter {
   bool get isActive => _active;
   int get frameCount => _buffer.length;
 
-  /// Introduce una muestra (vector de 26 dims) más la aceleración
-  /// resultante combinada de ambos guantes.
-  ///
-  /// Devuelve una secuencia completa cuando el movimiento terminó.
+  /// Introduce una muestra. Devuelve una secuencia completa cuando
+  /// el movimiento terminó.
   List<List<double>>? push(List<double> vector, double accelMag) {
     final resting = accelMag >= restMin && accelMag <= restMax;
 
@@ -462,8 +452,6 @@ class StabilityFilter {
 
   StabilityFilter({this.hold = const Duration(milliseconds: 300)});
 
-  /// Devuelve true si la detección [id] se ha mantenido estable
-  /// durante [hold]. Si [id] es null o cambia, se reinicia.
   bool confirm(String? id) {
     if (id == null) {
       _candidateId = null;
